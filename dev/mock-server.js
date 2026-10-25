@@ -90,7 +90,7 @@ http.createServer((req, res) => {
   const p = path.join(__dirname, '..', file);
   if (!fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.writeHead(404); return res.end('not found'); }
   let html = fs.readFileSync(p);
-  if (file === 'index.html') html = html.toString().replace("const SCRIPT_URL = '';", `const SCRIPT_URL = 'http://localhost:${PORT}/exec';`);
+  if (file === 'index.html') html = html.toString().replace(/^const SCRIPT_URL = '[^']*';/m, `const SCRIPT_URL = 'http://localhost:${PORT}/exec';`);
   const types = { '.html': 'text/html', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
   res.writeHead(200, { 'Content-Type': types[path.extname(p)] || 'application/octet-stream' });
   res.end(html);
