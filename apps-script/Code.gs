@@ -1,26 +1,65 @@
-// 94 Cyprus Street — Bookings API (Google Apps Script)
+// House bookings API (Google Apps Script)
 //
 // Deploy: in a Google Sheet → Extensions → Apps Script → paste this file →
 //   Deploy → New deployment → Web app → Execute as: Me, Who has access: Anyone.
 //
 // Then set Script Properties (Project Settings → Script Properties):
-//   GUEST_PASSWORD  (required)  shared password you give to family & friends
-//   OWNER_EMAIL     (optional)  where booking notifications go; defaults to you
-//   CALENDAR_NAME   (optional)  Google Calendar to write stays into; default "94 Cyprus Street"
-//   SITE_URL        (optional)  public URL of the booking site, used in emails
-//   MAX_NIGHTS      (optional)  default 14
-//   MAX_GUESTS      (optional)  default 6
+//   GUEST_PASSWORD    (required)  shared password you give to family & friends
+//   SITE_URL          (recommended) public URL of the booking site; used for the
+//                                 approve/decline link in request emails
+//   OWNER_EMAIL       (optional)  where booking notifications go; defaults to you
+//   CALENDAR_NAME     (optional)  Google Calendar to write stays into; default "House guests"
+//   PHOTOS_FOLDER_ID  (optional)  Google Drive folder of listing photos, shown after login
+//   MAX_NIGHTS        (optional)  default 14
+//   MAX_GUESTS        (optional)  default 6
+//
+// Anything identifying (address, photos, key safe code) lives in the Sheet or Drive,
+// never in this file or the site, because both are in a public repo:
+//   "House" tab    name / location / address / description, shown on the site after login
+//   "Arrival" tab  key safe code, wifi etc., emailed only to guests you approve
+//
+// Booking statuses:
+//   Requested  guest asked; dates are held until you approve or decline
+//   Confirmed  you approved; it's on the calendar and the guest has arrival info
+//   Declined   you said no; dates are free again
+//   Cancelled  the guest withdrew or cancelled
+//
+// Approve or decline from the link in the request email, or select the row in the
+// Bookings tab and use the "Bookings" menu. Editing the Status cell by hand does
+// not send any emails.
 //
 // The calendar is created in your Google account if it doesn't exist. Any event
 // you add to that calendar yourself (e.g. "I'm home") also blocks those dates.
 
 const SHEET_NAME = 'Bookings';
+const HOUSE_TAB = 'House';
+const ARRIVAL_TAB = 'Arrival';
 const HEADERS = [
   'ID', 'Created', 'Name', 'Email', 'Phone', 'Check-in', 'Check-out',
-  'Nights', 'Guests', 'Note', 'Status', 'Cancel Code', 'Calendar Event ID'
+  'Nights', 'Guests', 'Note', 'Status', 'Cancel Code', 'Calendar Event ID', 'Admin Token'
 ];
 const COL = {};
 HEADERS.forEach((h, i) => (COL[h] = i));
+const HOLDING = ['Requested', 'Confirmed'];   // statuses that block the dates
+
+const HOUSE_ROWS = [
+  ['Key', 'Value: shown on the site, only after the password'],
+  ['name', ''],
+  ['location', ''],
+  ['address', ''],
+  ['facts', ''],
+  ['hostMeta', ''],
+  ['description', ''],
+];
+const ARRIVAL_ROWS = [
+  ['Label', 'Value: emailed only to guests you approve (blank rows are skipped)'],
+  ['Key safe code', ''],
+  ['Key safe location', ''],
+  ['Wifi network', ''],
+  ['Wifi password', ''],
+  ['Getting here', ''],
+  ['Anything else', ''],
+];
 
 // ---------------------------------------------------------------- helpers
 
@@ -37,6 +76,15 @@ function json(obj) {
 
 function tz() {
   return Session.getScriptTimeZone();
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// escaped, with newlines kept
+function escBr(s) {
+  return esc(s).replace(/\n/g, '<br>');
 }
 
 // 'YYYY-MM-DD' -> Date at local midnight
@@ -70,6 +118,10 @@ function fmtLong(iso) {
   return Utilities.formatDate(parseISO(iso), tz(), 'EEE d MMM yyyy');
 }
 
+function fmtStay(b) {
+  return fmtLong(b.start) + ' → ' + fmtLong(b.end) + ' (' + b.nights + (b.nights === 1 ? ' night' : ' nights') + ')';
+}
+
 function randomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let out = '';
@@ -82,19 +134,74 @@ function getSheet() {
   let sheet = ss.getSheetByName(SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SHEET_NAME);
-    sheet.appendRow(HEADERS);
-    sheet.getRange(1, 1, 1, HEADERS.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
+  }
+  // Writes the header on a new sheet, and adds new columns to a sheet made by an older version.
+  if (sheet.getRange(1, HEADERS.length).getValue() !== HEADERS[HEADERS.length - 1]) {
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]).setFontWeight('bold');
     // Keep dates and IDs as plain text so nothing gets auto-converted.
     sheet.getRange('A:A').setNumberFormat('@');
     sheet.getRange('F:G').setNumberFormat('@');
-    sheet.getRange('L:M').setNumberFormat('@');
+    sheet.getRange('L:N').setNumberFormat('@');
   }
   return sheet;
 }
 
+// A two-column Key | Value tab, created with starter rows if missing.
+function kvSheet(name, rows) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.getRange(1, 1, rows.length, 2).setValues(rows);
+    sheet.getRange(1, 1, 1, 2).setFontWeight('bold');
+    sheet.getRange('B:B').setNumberFormat('@').setWrap(true);
+    sheet.setColumnWidth(1, 160);
+    sheet.setColumnWidth(2, 520);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// [[key, value], ...] for rows with a value, header skipped
+function readKV(name, rows) {
+  const data = kvSheet(name, rows).getDataRange().getValues();
+  return data.slice(1)
+    .map(r => [String(r[0] || '').trim(), String(r[1] || '').trim()])
+    .filter(r => r[0] && r[1]);
+}
+
+function houseInfo() {
+  const out = {};
+  readKV(HOUSE_TAB, HOUSE_ROWS).forEach(r => (out[r[0]] = r[1]));
+  return out;
+}
+
+function houseName() {
+  return houseInfo().name || 'the house';
+}
+
+// Listing photos as data: URIs, so they never sit at a public URL. Sorted by file name.
+function photoDataUris() {
+  const id = prop('PHOTOS_FOLDER_ID', '');
+  if (!id) return [];
+  try {
+    const files = [];
+    const it = DriveApp.getFolderById(id).getFiles();
+    while (it.hasNext()) {
+      const f = it.next();
+      if (/^image\//.test(f.getMimeType())) files.push(f);
+    }
+    files.sort((a, b) => (a.getName() < b.getName() ? -1 : 1));
+    return files.map(f => 'data:' + f.getMimeType() + ';base64,' + Utilities.base64Encode(f.getBlob().getBytes()));
+  } catch (err) {
+    Logger.log('Photos failed: ' + err);
+    return [];
+  }
+}
+
 function getCalendar() {
-  const name = prop('CALENDAR_NAME', '94 Cyprus Street');
+  const name = prop('CALENDAR_NAME', 'House guests');
   const found = CalendarApp.getCalendarsByName(name);
   if (found.length) return found[0];
   return CalendarApp.createCalendar(name, {
@@ -113,7 +220,7 @@ function readBookings() {
     rows.push({
       row: i + 1,
       id: String(r[COL['ID']]),
-      created: toISO(r[COL['Created']]),
+      created: r[COL['Created']] instanceof Date ? Utilities.formatDate(r[COL['Created']], tz(), 'yyyy-MM-dd HH:mm') : String(r[COL['Created']] || ''),
       name: String(r[COL['Name']] || ''),
       email: String(r[COL['Email']] || '').trim().toLowerCase(),
       phone: String(r[COL['Phone']] || ''),
@@ -124,14 +231,15 @@ function readBookings() {
       note: String(r[COL['Note']] || ''),
       status: String(r[COL['Status']] || 'Confirmed'),
       cancelCode: String(r[COL['Cancel Code']] || ''),
-      eventId: String(r[COL['Calendar Event ID']] || '')
+      eventId: String(r[COL['Calendar Event ID']] || ''),
+      adminToken: String(r[COL['Admin Token']] || '')
     });
   }
   return rows;
 }
 
-function activeBookings() {
-  return readBookings().filter(b => b.status === 'Confirmed');
+function holdingBookings() {
+  return readBookings().filter(b => HOLDING.indexOf(b.status) >= 0);
 }
 
 // Events on the calendar that weren't created by a booking (owner blocks).
@@ -161,6 +269,7 @@ function ownerBlocks(from, to) {
     out.push({
       id: 'cal-' + ev.getId(),
       name: 'Unavailable',
+      title: ev.getTitle(),
       start: toISO(start),
       end: toISO(end),
       guests: 0,
@@ -176,13 +285,13 @@ function overlaps(aStart, aEnd, bStart, bEnd) {
 }
 
 function publicView(b) {
-  return { id: b.id, name: b.name, start: b.start, end: b.end, guests: b.guests, nights: b.nights };
+  return { id: b.id, name: b.name, start: b.start, end: b.end, guests: b.guests, nights: b.nights, status: b.status };
 }
 
-function sendMail(to, subject, html) {
+function sendMail(to, subject, html, attachments) {
   if (!to) return;
   try {
-    MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: 'House bookings' });
+    MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: 'House bookings', attachments: attachments || [] });
   } catch (err) {
     Logger.log('Mail failed: ' + err);
   }
@@ -192,15 +301,125 @@ function ownerEmail() {
   return prop('OWNER_EMAIL', Session.getEffectiveUser().getEmail());
 }
 
+function setStatus(b, status) {
+  getSheet().getRange(b.row, COL['Status'] + 1).setValue(status);
+}
+
+function icsBlob(b, address) {
+  const d = s => s.replace(/-/g, '');
+  const text = s => String(s).replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//house-bookings//EN', 'BEGIN:VEVENT',
+    'UID:' + b.id + '@house-bookings',
+    'DTSTAMP:' + Utilities.formatDate(new Date(), 'UTC', "yyyyMMdd'T'HHmmss'Z'"),
+    'DTSTART;VALUE=DATE:' + d(b.start),
+    'DTEND;VALUE=DATE:' + d(b.end),
+    'SUMMARY:' + text('Stay at ' + houseName()),
+    address ? 'LOCATION:' + text(address) : null,
+    'END:VEVENT', 'END:VCALENDAR'
+  ].filter(Boolean).join('\r\n');
+  return Utilities.newBlob(ics, 'text/calendar', 'stay.ics');
+}
+
+function cancelLine(b) {
+  const site = prop('SITE_URL', '');
+  return '<p>Plans changed? ' + (site ? 'Go to <a href="' + esc(site) + '">' + esc(site) + '</a>, choose “Manage my stay”' : 'Open the booking site, choose “Manage my stay”') +
+    ' and use cancel code <b>' + esc(b.cancelCode) + '</b>.</p>';
+}
+
+// ---------------------------------------------------------------- approval
+
+// Shared by the review link and the Sheet menu. Re-reads the row under the lock so
+// two clicks can't both act on the same request.
+function decide(id, decision, message) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(15000);
+  try {
+    const b = readBookings().find(x => x.id === id);
+    if (!b) return { ok: false, error: 'Booking not found.' };
+    if (b.status !== 'Requested') return { ok: false, error: 'This booking is already ' + b.status.toLowerCase() + '.', status: b.status };
+    if (decision === 'approve') return approve(b);
+    if (decision === 'decline') return decline(b, message);
+    return { ok: false, error: 'Unknown decision' };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function approve(b) {
+  // Requests hold their dates against other guests, but not against events you add
+  // to the calendar afterwards.
+  const clash = ownerBlocks(addDays(parseISO(b.start), -1), addDays(parseISO(b.end), 1))
+    .find(x => overlaps(b.start, b.end, x.start, x.end));
+  if (clash) {
+    return { ok: false, error: 'These dates now clash with “' + clash.title + '” on your calendar (' + fmtLong(clash.start) + ' – ' + fmtLong(clash.end) + '). Move that event, or decline.' };
+  }
+
+  let eventId = '';
+  try {
+    const ev = getCalendar().createAllDayEvent(
+      b.name + ' staying (' + b.guests + (b.guests === 1 ? ' guest' : ' guests') + ')',
+      parseISO(b.start),
+      parseISO(b.end),
+      { description: 'Booked via the house site.\nEmail: ' + b.email + (b.phone ? '\nPhone: ' + b.phone : '') + (b.note ? '\nNote: ' + b.note : '') + '\nBooking ID: ' + b.id }
+    );
+    eventId = ev.getId();
+  } catch (err) {
+    Logger.log('Calendar failed: ' + err);
+  }
+  setStatus(b, 'Confirmed');
+  getSheet().getRange(b.row, COL['Calendar Event ID'] + 1).setValue(eventId);
+
+  const house = houseInfo();
+  const arrival = readKV(ARRIVAL_TAB, ARRIVAL_ROWS);
+  sendMail(
+    b.email,
+    'You’re booked: ' + fmtLong(b.start) + ' → ' + fmtLong(b.end),
+    '<p>Hi ' + esc(b.name.split(' ')[0]) + ',</p>' +
+      '<p>Good news: your stay at ' + esc(house.name || 'the house') + ' is confirmed.</p>' +
+      '<p><b>' + fmtStay(b) + '</b><br>Guests: ' + b.guests + '</p>' +
+      (house.address ? '<p><b>Address</b><br>' + escBr(house.address) + '</p>' : '') +
+      (arrival.length
+        ? '<p><b>Arrival details</b></p><table cellpadding="4" style="border-collapse:collapse">' +
+          arrival.map(r => '<tr><td style="vertical-align:top;color:#666;padding-right:16px">' + esc(r[0]) + '</td><td><b>' + escBr(r[1]) + '</b></td></tr>').join('') +
+          '</table>'
+        : '') +
+      '<p>A calendar file is attached.</p>' +
+      cancelLine(b),
+    [icsBlob(b, house.address)]
+  );
+  return { ok: true, status: 'Confirmed' };
+}
+
+function decline(b, message) {
+  setStatus(b, 'Declined');
+  const msg = String(message || '').trim().slice(0, 1000);
+  const site = prop('SITE_URL', '');
+  sendMail(
+    b.email,
+    'About your stay request: ' + fmtLong(b.start) + ' → ' + fmtLong(b.end),
+    '<p>Hi ' + esc(b.name.split(' ')[0]) + ',</p>' +
+      '<p>Thanks so much for asking. Unfortunately the house isn’t available for ' + fmtStay(b) + ', so we can’t confirm this one.</p>' +
+      (msg ? '<blockquote style="border-left:3px solid #ddd;margin:0;padding:4px 12px;color:#444">' + escBr(msg) + '</blockquote>' : '') +
+      '<p>We’d love to have you another time' + (site ? ': other dates are on <a href="' + esc(site) + '">the booking site</a>.' : '.') + '</p>'
+  );
+  return { ok: true, status: 'Declined' };
+}
+
+function reviewLink(b) {
+  const site = prop('SITE_URL', '');
+  return site ? site.replace(/#.*$/, '') + '#review=' + b.id + '.' + b.adminToken : '';
+}
+
 // ---------------------------------------------------------------- actions
 
 function actionList() {
   const from = addDays(today(), -60);
   const to = addDays(today(), 400);
-  const bookings = activeBookings()
+  const bookings = holdingBookings()
     .filter(b => b.end >= toISO(from))
     .map(publicView);
-  const blocks = ownerBlocks(from, to);
+  const blocks = ownerBlocks(from, to).map(x => ({ id: x.id, name: x.name, start: x.start, end: x.end, guests: 0, external: true }));
   return {
     ok: true,
     bookings: bookings.concat(blocks),
@@ -209,6 +428,12 @@ function actionList() {
       maxGuests: Number(prop('MAX_GUESTS', 6))
     }
   };
+}
+
+function actionHouse() {
+  const house = houseInfo();
+  house.photos = photoDataUris();
+  return { ok: true, house: house };
 }
 
 function actionBook(body) {
@@ -233,52 +458,47 @@ function actionBook(body) {
   lock.waitLock(15000);
   try {
     const sIso = toISO(start), eIso = toISO(end);
-    const taken = activeBookings().map(publicView).concat(ownerBlocks(addDays(start, -1), addDays(end, 1)));
+    const taken = holdingBookings().map(publicView).concat(ownerBlocks(addDays(start, -1), addDays(end, 1)));
     const clash = taken.find(b => overlaps(sIso, eIso, b.start, b.end));
     if (clash) {
       return { ok: false, error: 'Those dates have just been taken (' + fmtLong(clash.start) + ' – ' + fmtLong(clash.end) + '). Please choose different dates.' };
     }
 
-    const id = Utilities.getUuid().slice(0, 8);
-    const cancelCode = randomCode();
-    let eventId = '';
-    try {
-      const ev = getCalendar().createAllDayEvent(
-        name + ' staying (' + guests + (guests === 1 ? ' guest' : ' guests') + ')',
-        start,
-        end,
-        { description: 'Booked via the house site.\nEmail: ' + email + (phone ? '\nPhone: ' + phone : '') + (note ? '\nNote: ' + note : '') + '\nBooking ID: ' + id }
-      );
-      eventId = ev.getId();
-    } catch (err) {
-      Logger.log('Calendar failed: ' + err);
-    }
-
+    const b = {
+      id: Utilities.getUuid().slice(0, 8),
+      name: name, email: email, phone: phone, note: note, guests: guests,
+      start: sIso, end: eIso, nights: nights,
+      cancelCode: randomCode(),
+      adminToken: Utilities.getUuid().replace(/-/g, '')
+    };
+    // The calendar event is only created once you approve.
     getSheet().appendRow([
-      id, Utilities.formatDate(new Date(), tz(), 'yyyy-MM-dd HH:mm'),
-      name, email, phone, sIso, eIso, nights, guests, note, 'Confirmed', cancelCode, eventId
+      b.id, Utilities.formatDate(new Date(), tz(), 'yyyy-MM-dd HH:mm'),
+      name, email, phone, sIso, eIso, nights, guests, note, 'Requested', b.cancelCode, '', b.adminToken
     ]);
 
-    const site = prop('SITE_URL', '');
-    const when = fmtLong(sIso) + ' → ' + fmtLong(eIso) + ' (' + nights + (nights === 1 ? ' night' : ' nights') + ')';
+    const link = reviewLink(b);
     sendMail(
       ownerEmail(),
-      'New stay: ' + name + ', ' + fmtLong(sIso),
-      '<p><b>' + name + '</b> has booked the house.</p>' +
-        '<p>' + when + '<br>Guests: ' + guests + '<br>Email: ' + email + (phone ? '<br>Phone: ' + phone : '') + '</p>' +
-        (note ? '<p>Note: ' + note + '</p>' : '') +
-        '<p style="color:#888">Booking ID ' + id + ' · it’s on your “' + prop('CALENDAR_NAME', '94 Cyprus Street') + '” calendar.</p>'
+      'Stay request: ' + name + ', ' + fmtLong(sIso),
+      '<p><b>' + esc(name) + '</b> would like to stay.</p>' +
+        '<p>' + fmtStay(b) + '<br>Guests: ' + guests + '<br>Email: ' + esc(email) + (phone ? '<br>Phone: ' + esc(phone) : '') + '</p>' +
+        (note ? '<p>Note: ' + escBr(note) + '</p>' : '') +
+        (link ? '<p><a href="' + esc(link) + '" style="display:inline-block;background:#222;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:600">Review: approve or decline</a></p>' : '') +
+        '<p style="color:#888">' + (link ? 'Or in' : 'To answer, open') + ' the bookings Sheet, select the row, then <b>Bookings → Approve / Decline selected request</b>. ' +
+        'The dates are held until you answer. Booking ID ' + b.id + '.</p>'
     );
     sendMail(
       email,
-      'You’re booked: ' + fmtLong(sIso) + ' → ' + fmtLong(eIso),
-      '<p>Hi ' + name.split(' ')[0] + ',</p>' +
-        '<p>You’re all set to stay at 94 Cyprus Street.</p>' +
-        '<p><b>' + when + '</b><br>Guests: ' + guests + '</p>' +
-        '<p>Need to cancel? ' + (site ? 'Go to <a href="' + site + '">' + site + '</a>, choose “Manage my stay”' : 'Open the booking site, choose “Manage my stay”') + ' and use cancel code <b>' + cancelCode + '</b>.</p>'
+      'Request received: ' + fmtLong(sIso) + ' → ' + fmtLong(eIso),
+      '<p>Hi ' + esc(name.split(' ')[0]) + ',</p>' +
+        '<p>Thanks! We’ve got your request to stay:</p>' +
+        '<p><b>' + fmtStay(b) + '</b><br>Guests: ' + guests + '</p>' +
+        '<p>The dates are held for you. You’ll get another email once it’s confirmed, with the address and arrival details.</p>' +
+        cancelLine(b)
     );
 
-    return { ok: true, id: id, cancelCode: cancelCode, start: sIso, end: eIso, nights: nights };
+    return { ok: true, id: b.id, cancelCode: b.cancelCode, start: sIso, end: eIso, nights: nights, status: 'Requested' };
   } finally {
     lock.releaseLock();
   }
@@ -289,7 +509,7 @@ function actionMine(body) {
   if (!email) return { ok: false, error: 'Enter the email you booked with.' };
   const mine = readBookings()
     .filter(b => b.email === email)
-    .map(b => Object.assign(publicView(b), { status: b.status }))
+    .map(publicView)
     .sort((a, b) => (a.start < b.start ? 1 : -1));
   return { ok: true, bookings: mine };
 }
@@ -299,11 +519,12 @@ function actionCancel(body) {
   const code = String(body.cancelCode || '').trim().toUpperCase();
   const b = readBookings().find(x => x.id === id);
   if (!b) return { ok: false, error: 'Booking not found.' };
-  if (b.status !== 'Confirmed') return { ok: true, alreadyCancelled: true };
+  if (b.status === 'Cancelled') return { ok: true, alreadyCancelled: true };
+  if (HOLDING.indexOf(b.status) < 0) return { ok: false, error: 'This booking was ' + b.status.toLowerCase() + '.' };
   if (!code || code !== b.cancelCode) return { ok: false, error: 'That cancel code doesn’t match.' };
 
-  const sheet = getSheet();
-  sheet.getRange(b.row, COL['Status'] + 1).setValue('Cancelled');
+  const wasRequest = b.status === 'Requested';
+  setStatus(b, 'Cancelled');
   if (b.eventId) {
     try {
       const ev = getCalendar().getEventById(b.eventId);
@@ -314,15 +535,37 @@ function actionCancel(body) {
   }
   sendMail(
     ownerEmail(),
-    'Cancelled: ' + b.name + ', ' + fmtLong(b.start),
-    '<p><b>' + b.name + '</b> cancelled their stay ' + fmtLong(b.start) + ' → ' + fmtLong(b.end) + '.</p>'
+    (wasRequest ? 'Request withdrawn: ' : 'Cancelled: ') + b.name + ', ' + fmtLong(b.start),
+    '<p><b>' + esc(b.name) + '</b> ' + (wasRequest ? 'withdrew their request for ' : 'cancelled their stay ') + fmtLong(b.start) + ' → ' + fmtLong(b.end) + '.</p>'
   );
   sendMail(
     b.email,
-    'Your stay is cancelled: ' + fmtLong(b.start) + ' → ' + fmtLong(b.end),
-    '<p>Hi ' + b.name.split(' ')[0] + ', your stay at 94 Cyprus Street (' + fmtLong(b.start) + ' → ' + fmtLong(b.end) + ') has been cancelled. Book again any time.</p>'
+    (wasRequest ? 'Request withdrawn: ' : 'Your stay is cancelled: ') + fmtLong(b.start) + ' → ' + fmtLong(b.end),
+    '<p>Hi ' + esc(b.name.split(' ')[0]) + ', your ' + (wasRequest ? 'request to stay' : 'stay') + ' (' + fmtLong(b.start) + ' → ' + fmtLong(b.end) + ') has been cancelled. Book again any time.</p>'
   );
   return { ok: true };
+}
+
+// The owner's review link carries a per-booking token instead of the guest password.
+function bookingForToken(body) {
+  const b = readBookings().find(x => x.id === String(body.id || ''));
+  if (!b || !b.adminToken || String(body.token || '') !== b.adminToken) return null;
+  return b;
+}
+
+function actionReview(body) {
+  const b = bookingForToken(body);
+  if (!b) return { ok: false, error: 'This review link isn’t valid.' };
+  return {
+    ok: true,
+    booking: Object.assign(publicView(b), { email: b.email, phone: b.phone, note: b.note, created: b.created })
+  };
+}
+
+function actionDecide(body) {
+  const b = bookingForToken(body);
+  if (!b) return { ok: false, error: 'This review link isn’t valid.' };
+  return decide(b.id, body.decision, body.message);
 }
 
 // ---------------------------------------------------------------- entry points
@@ -339,14 +582,18 @@ function doPost(e) {
     return json({ ok: false, error: 'Bad request' });
   }
 
-  const expected = prop('GUEST_PASSWORD', '');
-  if (!expected) return json({ ok: false, error: 'GUEST_PASSWORD is not set in Script Properties.' });
-  if (String(body.password || '') !== expected) return json({ ok: false, error: 'Wrong password', auth: false });
-
   try {
+    if (body.action === 'review') return json(actionReview(body));
+    if (body.action === 'decide') return json(actionDecide(body));
+
+    const expected = prop('GUEST_PASSWORD', '');
+    if (!expected) return json({ ok: false, error: 'GUEST_PASSWORD is not set in Script Properties.' });
+    if (String(body.password || '') !== expected) return json({ ok: false, error: 'Wrong password', auth: false });
+
     switch (body.action) {
       case 'login':  return json({ ok: true });
       case 'list':   return json(actionList());
+      case 'house':  return json(actionHouse());
       case 'book':   return json(actionBook(body));
       case 'mine':   return json(actionMine(body));
       case 'cancel': return json(actionCancel(body));
@@ -358,10 +605,51 @@ function doPost(e) {
   }
 }
 
-// Run once from the editor to grant Calendar/Mail/Sheets permissions and
-// create the sheet + calendar up front.
+// ---------------------------------------------------------------- Sheet menu
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Bookings')
+    .addItem('Approve selected request', 'approveSelected')
+    .addItem('Decline selected request', 'declineSelected')
+    .addToUi();
+}
+
+function selectedBooking(ui) {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const row = sheet.getActiveRange().getRow();
+  const b = sheet.getName() === SHEET_NAME ? readBookings().find(x => x.row === row) : null;
+  if (!b) ui.alert('Select a booking row on the ' + SHEET_NAME + ' tab first.');
+  return b;
+}
+
+function approveSelected() {
+  const ui = SpreadsheetApp.getUi();
+  const b = selectedBooking(ui);
+  if (!b) return;
+  if (ui.alert('Approve ' + b.name + ', ' + fmtStay(b) + '?', ui.ButtonSet.YES_NO) !== ui.Button.YES) return;
+  const r = decide(b.id, 'approve');
+  ui.alert(r.ok ? 'Approved. ' + b.name + ' has been emailed the address and arrival details.' : r.error);
+}
+
+function declineSelected() {
+  const ui = SpreadsheetApp.getUi();
+  const b = selectedBooking(ui);
+  if (!b) return;
+  const res = ui.prompt('Decline ' + b.name + ', ' + fmtStay(b) + '?', 'Optional message to include in the email:', ui.ButtonSet.OK_CANCEL);
+  if (res.getSelectedButton() !== ui.Button.OK) return;
+  const r = decide(b.id, 'decline', res.getResponseText());
+  ui.alert(r.ok ? 'Declined. ' + b.name + ' has been emailed.' : r.error);
+}
+
+// Run once from the editor to grant Calendar/Mail/Sheets/Drive permissions and
+// create the tabs + calendar up front.
 function setup() {
   getSheet();
+  kvSheet(HOUSE_TAB, HOUSE_ROWS);
+  kvSheet(ARRIVAL_TAB, ARRIVAL_ROWS);
   getCalendar();
-  Logger.log('Ready. Calendar: ' + getCalendar().getName() + ' · owner email: ' + ownerEmail());
+  photoDataUris();
+  Logger.log('Ready. Calendar: ' + getCalendar().getName() + ' · owner email: ' + ownerEmail() +
+    ' · review links: ' + (prop('SITE_URL', '') ? 'on' : 'off (set SITE_URL)'));
 }
