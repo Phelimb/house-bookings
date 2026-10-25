@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>94 Cyprus Street — Stay with us</title>
+<style>
+  :root {
+    --accent: #d93b57;
+    --accent-dark: #b52c45;
+    --text: #222222;
+    --muted: #6a6a6a;
+    --faint: #b0b0b0;
+    --border: #dddddd;
+    --border-light: #ebebeb;
+    --bg: #ffffff;
+    --bg-soft: #f7f7f7;
+    --booked: #f1f1f1;
+    --range: #f2f2f2;
+    --ok: #1f7a4d;
+    --radius: 12px;
+    --shadow: 0 6px 16px rgba(0,0,0,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text); background: var(--bg); line-height: 1.5; font-size: 15px;
+  }
+  a { color: inherit; }
+  button { font: inherit; cursor: pointer; }
+  input, textarea, select { font: inherit; color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── header ── */
+  header { border-bottom: 1px solid var(--border-light); position: sticky; top: 0; background: rgba(255,255,255,0.96); backdrop-filter: blur(8px); z-index: 50; }
+  header .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--accent); text-decoration: none; }
+  .brand svg { width: 28px; height: 28px; }
+  .hdr-actions { display: flex; gap: 8px; align-items: center; }
+  .pill { border: 1px solid var(--border); background: #fff; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; }
+  .pill:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+
+  /* ── title ── */
+  .title-row { padding: 24px 0 16px; }
+  .title-row h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
+  .title-meta { color: var(--text); font-size: 14px; margin-top: 4px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .title-meta .dot::before { content: "·"; margin: 0 4px; color: var(--muted); }
+  .title-meta u { text-decoration: underline; font-weight: 600; }
+
+  /* ── photos ── */
+  .photos { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 220px 220px; gap: 8px; border-radius: 16px; overflow: hidden; }
+  .photos .ph { background-size: cover; background-position: center; position: relative; }
+  .photos .ph:first-child { grid-row: 1 / span 2; }
+  .ph.placeholder { display: flex; align-items: flex-end; padding: 14px; color: #fff; font-size: 13px; font-weight: 600; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+  .ph.p1 { background: linear-gradient(135deg, #3a5a40, #a3b18a); }
+  .ph.p2 { background: linear-gradient(135deg, #c9a84c, #e8d5a3); }
+  .ph.p3 { background: linear-gradient(135deg, #588157, #dad7cd); }
+  .ph.p4 { background: linear-gradient(135deg, #8a6d3b, #c9a84c); }
+  .ph.p5 { background: linear-gradient(135deg, #344e41, #588157); }
+  .ph[data-photo] { cursor: pointer; }
+  .ph[data-photo]:hover::after { content: ""; position: absolute; inset: 0; background: rgba(0,0,0,0.12); }
+  .photos { position: relative; }
+  .showall { position: absolute; right: 16px; bottom: 16px; border: 1px solid var(--text); background: #fff; border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+  .gallery-modal { max-width: 820px; }
+  .gallery { display: grid; gap: 10px; }
+  .gallery img { width: 100%; border-radius: 10px; display: block; }
+
+  /* ── main layout ── */
+  .main { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 64px; padding: 32px 0 80px; align-items: start; }
+  .content > section { padding: 28px 0; border-bottom: 1px solid var(--border-light); }
+  .content > section:last-child { border-bottom: 0; }
+  .host { display: flex; justify-content: space-between; align-items: center; padding-top: 0 !important; }
+  .host h2 { font-size: 20px; font-weight: 600; }
+  .host p { color: var(--muted); font-size: 14px; }
+  .avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; flex-shrink: 0; }
+  h2.sec { font-size: 20px; font-weight: 600; margin-bottom: 14px; }
+  .desc p { margin-bottom: 12px; }
+  .amenities { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+  .amenities li { list-style: none; display: flex; gap: 12px; align-items: center; }
+  .amenities .ic { font-size: 20px; width: 28px; text-align: center; }
+  .rules li { list-style: none; padding: 8px 0; border-bottom: 1px dashed var(--border-light); display: flex; gap: 10px; }
+  .rules li:last-child { border-bottom: 0; }
+  .highlights { display: grid; gap: 18px; }
+  .highlights li { list-style: none; display: flex; gap: 16px; }
+  .highlights .ic { font-size: 22px; width: 28px; text-align: center; }
+  .highlights b { display: block; }
+  .highlights span { color: var(--muted); font-size: 14px; }
+
+  /* ── calendar ── */
+  .cal-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .cal-sub { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+  .cal-nav { display: flex; gap: 6px; }
+  .cal-nav button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: #fff; }
+  .cal-nav button:disabled { opacity: 0.3; cursor: default; }
+  .cal-nav button:not(:disabled):hover { background: var(--bg-soft); }
+  .months { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+  .month h3 { text-align: center; font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .dow, .days { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .dow span { text-align: center; font-size: 11px; color: var(--muted); font-weight: 600; padding-bottom: 8px; }
+  .day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 14px; position: relative; border: 0; background: transparent; border-radius: 50%; margin: 1px 0; }
+  .day.empty { visibility: hidden; }
+  .day:not(.disabled):not(.booked):hover { box-shadow: inset 0 0 0 1.5px var(--text); }
+  .day.disabled { color: var(--faint); cursor: default; text-decoration: line-through; }
+  .day.booked { color: var(--faint); cursor: default; text-decoration: line-through; }
+  .day.booked.checkout-ok { text-decoration: none; color: var(--text); cursor: pointer; }
+  .day.booked.checkout-ok::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: linear-gradient(135deg, transparent 50%, var(--booked) 50%); z-index: -1; }
+  .day.today { font-weight: 700; }
+  .day.today::before { content: ""; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  .day.in-range { background: var(--range); border-radius: 0; }
+  .day.start, .day.end { background: var(--text); color: #fff; }
+  .day.start { border-radius: 50% 0 0 50%; }
+  .day.end { border-radius: 0 50% 50% 0; }
+  .day.start.end, .day.start.only { border-radius: 50%; }
+  .day.start::before, .day.end::before { display: none; }
+  .day.unreachable { color: var(--faint); cursor: default; }
+  .legend { display: flex; gap: 18px; margin-top: 16px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .cal-clear { background: none; border: 0; text-decoration: underline; font-weight: 600; font-size: 13px; padding: 0; margin-top: 8px; }
+
+  /* ── upcoming ── */
+  .stays { display: grid; gap: 10px; }
+  .stay { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1px solid var(--border-light); border-radius: var(--radius); }
+  .stay .when { min-width: 120px; font-weight: 600; font-size: 14px; }
+  .stay .who { flex: 1; }
+  .stay .who small { display: block; color: var(--muted); }
+  .stay .tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--bg-soft); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .empty-note { color: var(--muted); font-size: 14px; }
+
+  /* ── booking card ── */
+  .card { position: sticky; top: 88px; border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); background: #fff; }
+  .price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 18px; }
+  .price b { font-size: 22px; }
+  .price span { color: var(--muted); }
+  .price s { color: var(--muted); font-size: 14px; margin-left: 4px; }
+  .fields { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .dates { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
+  .field { padding: 10px 12px; text-align: left; background: #fff; border: 0; width: 100%; }
+  .field:hover { background: var(--bg-soft); }
+  .field label { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+  .field div { font-size: 14px; color: var(--muted); margin-top: 1px; }
+  .field div.set { color: var(--text); }
+  .dates .field:first-child { border-right: 1px solid var(--border); }
+  .guests { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; }
+  .stepper { display: flex; align-items: center; gap: 12px; }
+  .stepper button { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--muted); background: #fff; font-size: 18px; line-height: 1; }
+  .stepper button:disabled { opacity: 0.3; cursor: default; }
+  .btn { width: 100%; margin-top: 16px; padding: 14px; border: 0; border-radius: 8px; background: linear-gradient(90deg, var(--accent), var(--accent-dark)); color: #fff; font-size: 16px; font-weight: 600; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.secondary { background: #fff; color: var(--text); border: 1px solid var(--text); }
+  .card .hint { text-align: center; color: var(--muted); font-size: 13px; margin-top: 12px; }
+  .summary { margin-top: 18px; display: grid; gap: 8px; font-size: 15px; }
+  .summary div { display: flex; justify-content: space-between; }
+  .summary .total { border-top: 1px solid var(--border-light); padding-top: 12px; font-weight: 700; }
+  .manage-link { display: block; text-align: center; margin-top: 14px; font-size: 13px; text-decoration: underline; background: none; border: 0; width: 100%; }
+
+  /* ── mobile bar ── */
+  .mbar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); padding: 12px 20px; z-index: 40; align-items: center; justify-content: space-between; gap: 12px; }
+  .mbar b { display: block; }
+  .mbar small { color: var(--muted); }
+  .mbar .btn { width: auto; margin: 0; padding: 12px 22px; }
+
+  /* ── modals ── */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+  .overlay[hidden] { display: none; }
+  .modal { background: #fff; border-radius: 16px; width: 100%; max-width: 480px; max-height: 92vh; overflow: auto; padding: 28px; position: relative; }
+  .modal h2 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .modal .sub { color: var(--muted); font-size: 14px; margin-bottom: 18px; }
+  .modal .x { position: absolute; top: 14px; right: 14px; border: 0; background: none; font-size: 22px; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; }
+  .modal .x:hover { background: var(--bg-soft); }
+  .frow { margin-bottom: 12px; }
+  .frow label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .frow input, .frow textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--border); border-radius: 8px; }
+  .frow input:focus, .frow textarea:focus { outline: 2px solid var(--text); outline-offset: -1px; }
+  .frow textarea { min-height: 80px; resize: vertical; }
+  .frow small { color: var(--muted); font-size: 12px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .err { color: var(--accent); font-size: 13px; margin-top: 8px; min-height: 18px; }
+  .recap { background: var(--bg-soft); border-radius: 10px; padding: 14px; margin-bottom: 16px; font-size: 14px; }
+  .recap b { display: block; font-size: 16px; margin-bottom: 2px; }
+  .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 20px; letter-spacing: 0.15em; background: var(--bg-soft); border-radius: 8px; padding: 10px 14px; display: inline-block; margin: 6px 0 12px; }
+  .success-ic { width: 56px; height: 56px; border-radius: 50%; background: var(--ok); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 14px; }
+  .linkbtn { display: inline-block; text-decoration: none; border: 1px solid var(--text); border-radius: 8px; padding: 10px 14px; font-weight: 600; font-size: 14px; margin-top: 6px; }
+  .mine .stay { margin-bottom: 8px; }
+  .mine .stay button { border: 1px solid var(--border); background: #fff; border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 600; }
+  .mine .stay.cancelled { opacity: 0.55; }
+
+  /* ── gate ── */
+  .gate { position: fixed; inset: 0; z-index: 200; background: #fff; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .gate[hidden] { display: none; }
+  .gate-box { width: 100%; max-width: 380px; text-align: center; }
+  .gate-box .brand { justify-content: center; margin-bottom: 20px; font-size: 22px; }
+  .gate-box h1 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+  .gate-box p { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  .gate-box input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; text-align: center; letter-spacing: 0.05em; }
+  .gate-box .btn { margin-top: 12px; }
+  .banner { background: #fff7e6; color: #7a5200; font-size: 13px; padding: 8px 0; border-bottom: 1px solid #f3dfae; }
+  .banner[hidden] { display: none; }
+
+  /* ── map ── */
+  .map { border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); }
+  .map iframe { width: 100%; height: 320px; border: 0; display: block; }
+
+  footer { border-top: 1px solid var(--border-light); padding: 24px 0 90px; color: var(--muted); font-size: 13px; }
+
+  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--text); color: #fff; padding: 10px 16px; border-radius: 999px; font-size: 14px; z-index: 150; box-shadow: var(--shadow); }
+  .toast[hidden] { display: none; }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; gap: 0; padding-top: 16px; }
+    .card { display: none; }
+    .mbar { display: flex; }
+    .months { grid-template-columns: 1fr; }
+    .photos { grid-template-columns: 1fr; grid-template-rows: 240px; }
+    .photos .ph:not(:first-child) { display: none; }
+    .photos .ph:first-child { grid-row: auto; }
+    .title-row h1 { font-size: 22px; }
+    .amenities { grid-template-columns: 1fr; }
+    .stay .when { min-width: 96px; }
+    .wrap { padding: 0 18px; }
+    .brand { font-size: 15px; white-space: nowrap; }
+    .pill { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+    header .wrap { height: 56px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- password gate -->
+<div class="gate" id="gate" hidden>
+  <form class="gate-box" id="gateForm">
+    <div class="brand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg> 94 Cyprus Street</div>
+    <h1>Friends &amp; family only</h1>
+    <p>Enter the password Phelim gave you to see availability and book a stay.</p>
+    <input type="password" id="gatePw" placeholder="Password" autocomplete="current-password" autofocus />
+    <button class="btn" type="submit" id="gateBtn">Come in</button>
+    <div class="err" id="gateErr"></div>
+  </form>
+</div>
+
+<div class="banner" id="demoBanner" hidden><div class="wrap">Demo mode — no backend connected yet. Bookings are pretend. See the README to connect Google Sheets + Calendar. Demo password: <b>demo</b></div></div>
+
+<header>
+  <div class="wrap">
+    <a class="brand" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2z"/></svg> 94 Cyprus Street</a>
+    <div class="hdr-actions">
+      <button class="pill" id="manageBtnTop">Manage my stay</button>
+      <button class="pill" id="logoutBtn" title="Forget password on this device">Log out</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="title-row">
+    <h1 id="houseName"></h1>
+    <div class="title-meta">
+      <span>★ Free for friends &amp; family</span>
+      <span class="dot"></span>
+      <u id="houseLocation"></u>
+      <span class="dot"></span>
+      <span id="houseFacts"></span>
+    </div>
+  </div>
+
+  <div class="photos" id="photos"></div>
+
+  <div class="main">
+    <div class="content">
+      <section class="host">
+        <div>
+          <h2 id="hostLine"></h2>
+          <p id="hostMeta"></p>
+        </div>
+        <div class="avatar" id="hostAvatar"></div>
+      </section>
+
+      <section>
+        <ul class="highlights" id="highlights"></ul>
+      </section>
+
+      <section class="desc" id="description"></section>
+
+      <section>
+        <h2 class="sec">What the place offers</h2>
+        <ul class="amenities" id="amenities"></ul>
+      </section>
+
+      <section id="calendarSection">
+        <div class="cal-head">
+          <h2 class="sec" id="calTitle">Select your dates</h2>
+          <div class="cal-nav">
+            <button id="calPrev" aria-label="Previous month">‹</button>
+            <button id="calNext" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <div class="cal-sub" id="calSub">Pick a check-in day, then a check-out day.</div>
+        <div class="months" id="months"></div>
+        <div class="legend">
+          <span><i style="background:var(--text)"></i>Your dates</span>
+          <span><i style="border:1px solid var(--border);background:#fff;text-decoration:line-through"></i>Unavailable</span>
+          <span><i style="background:linear-gradient(135deg,#fff 50%,var(--booked) 50%);border:1px solid var(--border)"></i>Check-out only</span>
+        </div>
+        <button class="cal-clear" id="calClear" hidden>Clear dates</button>
+      </section>
+
+      <section>
+        <h2 class="sec">Who's coming</h2>
+        <div class="stays" id="stays"></div>
+      </section>
+
+      <section>
+        <h2 class="sec">House notes</h2>
+        <ul class="rules" id="rules"></ul>
+      </section>
+
+      <section>
+        <h2 class="sec">Where you'll be</h2>
+        <p style="margin-bottom:12px" id="addressLine"></p>
+        <div class="map" id="map"></div>
+      </section>
+    </div>
+
+    <aside>
+      <div class="card">
+        <div class="price"><b>Free</b><span>night</span><s>£0</s></div>
+        <div class="fields">
+          <div class="dates">
+            <button class="field" id="fCheckIn"><label>Check-in</label><div>Add date</div></button>
+            <button class="field" id="fCheckOut"><label>Check-out</label><div>Add date</div></button>
+          </div>
+          <div class="guests">
+            <div><label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Guests</label><div id="guestLabel" style="font-size:14px">2 guests</div></div>
+            <div class="stepper"><button id="gMinus">−</button><span id="gCount">2</span><button id="gPlus">+</button></div>
+          </div>
+        </div>
+        <button class="btn" id="reserveBtn" disabled>Reserve</button>
+        <div class="hint" id="cardHint">You won't be charged (ever)</div>
+        <div class="summary" id="summary" hidden>
+          <div><span id="sumNights"></span><span>£0</span></div>
+          <div><span>Family &amp; friends discount</span><span>−£0</span></div>
+          <div class="total"><span>Total</span><span>£0</span></div>
+        </div>
+        <button class="manage-link" id="manageBtn">Already booked? Manage my stay</button>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<footer><div class="wrap">Made with love for the people we love. Questions? Message <span id="footHost"></span>.</div></footer>
+
+<div class="mbar" id="mbar">
+  <div><b id="mbarTitle">Free</b><small id="mbarSub">Select dates</small></div>
+  <button class="btn" id="mbarBtn">Select dates</button>
+</div>
+
+<!-- booking form -->
+<div class="overlay" id="bookModal" hidden>
+  <form class="modal" id="bookForm">
+    <button type="button" class="x" data-close>×</button>
+    <h2>Confirm your stay</h2>
+    <div class="sub">Just a couple of details so Phelim knows who's coming.</div>
+    <div class="recap" id="bookRecap"></div>
+    <div class="two">
+      <div class="frow"><label>Your name</label><input id="bName" required maxlength="80" autocomplete="name" /></div>
+      <div class="frow"><label>Guests</label><input id="bGuests" type="number" min="1" required /></div>
+    </div>
+    <div class="frow"><label>Email</label><input id="bEmail" type="email" required autocomplete="email" /><small>We'll send your confirmation and cancel code here.</small></div>
+    <div class="frow"><label>Phone <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="bPhone" type="tel" autocomplete="tel" /></div>
+    <div class="frow"><label>Anything to add? <span style="font-weight:400;color:var(--muted)">(optional)</span></label><textarea id="bNote" placeholder="Arrival time, who's coming, need the cot, etc."></textarea></div>
+    <button class="btn" type="submit" id="bookSubmit">Confirm booking</button>
+    <div class="err" id="bookErr"></div>
+  </form>
+</div>
+
+<!-- success -->
+<div class="overlay" id="doneModal" hidden>
+  <div class="modal">
+    <button type="button" class="x" data-close>×</button>
+    <div class="success-ic">✓</div>
+    <h2>You're booked!</h2>
+    <div class="sub" id="doneSub"></div>
+    <p style="font-size:14px">Your cancel code (also in your email):</p>
+    <div class="code" id="doneCode"></div>
+    <div><a class="linkbtn" id="icsLink" download="stay-94-cyprus-street.ics">＋ Add to my calendar</a></div>
+    <p style="color:var(--muted);font-size:13px;margin-top:16px">It's already on Phelim's calendar too.</p>
+  </div>
+</div>
+
+<!-- manage -->
+<div class="overlay" id="manageModal" hidden>
+  <div class="modal">
+    <button type="button" class="x" data-close>×</button>
+    <h2>Manage my stay</h2>
+    <div class="sub">Enter the email you booked with.</div>
+    <form id="mineForm" style="display:flex;gap:8px;margin-bottom:16px">
+      <input id="mineEmail" type="email" required placeholder="you@example.com" style="flex:1;padding:11px 12px;border:1px solid var(--border);border-radius:8px" />
+      <button class="btn" type="submit" style="width:auto;margin:0;padding:0 18px">Find</button>
+    </form>
+    <div class="mine" id="mineList"></div>
+    <div class="err" id="mineErr"></div>
+  </div>
+</div>
+
+<!-- gallery -->
+<div class="overlay" id="galleryModal" hidden>
+  <div class="modal gallery-modal">
+    <button type="button" class="x" data-close>×</button>
+    <h2 style="margin-bottom:14px">Photos</h2>
+    <div class="gallery" id="gallery"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ============================================================
+   CONFIG — edit these
+   ============================================================ */
+const SCRIPT_URL = '';   // ← paste your Apps Script Web App URL here (see README)
+
+const HOUSE = {
+  name: '94 Cyprus Street',
+  location: 'Bethnal Green, London',
+  address: '94 Cyprus Street, London E2 0NN',
+  host: 'Phelim',
+  hostMeta: 'Away for a while · the house is yours',
+  facts: '3 bedrooms · 1 bathroom · garden',
+  photos: [   // first one is the big one; first 5 in the grid, all in the gallery
+    'photos/01.jpg', 'photos/08.jpg', 'photos/02.jpg', 'photos/07.jpg', 'photos/04.jpg',
+    'photos/03.jpg', 'photos/09.jpg', 'photos/05.jpg', 'photos/06.jpg',
+  ],
+  highlights: [
+    ['🔑', 'Self check-in', 'Key safe by the front door — code is in your confirmation email.'],
+    ['🚇', 'Great location', 'Short walk to Bethnal Green tube, Victoria Park and Columbia Road.'],
+    ['🗓️', 'Free cancellation', 'Plans change — cancel any time with your cancel code.'],
+  ],
+  description: [
+    'Our Victorian terrace in Bethnal Green, all yours while we’re away. Three bedrooms, a big kitchen with bifold doors onto the garden, and a trampoline if you’re bringing kids. Make yourself at home: cook, have people round, sleep in.',
+    'Check-in from 3pm, check-out by 11am on the day you leave, so the next guests find it fresh. If you want to arrive earlier or leave later just add a note when you book.',
+  ],
+  amenities: [
+    ['📶', 'Fast wifi'], ['🍳', 'Full kitchen'], ['🧺', 'Washer & dryer'], ['🛏️', 'Fresh linen & towels'],
+    ['📺', 'TV with streaming'], ['🌿', 'Garden'], ['☕', 'Coffee machine'], ['🧸', 'Travel cot on request'],
+  ],
+  rules: [
+    ['🕒', 'Check-in from 3pm · check-out by 11am'],
+    ['🚭', 'No smoking indoors'],
+    ['🧹', 'Please strip the beds and run the dishwasher before you go'],
+    ['🗑️', 'Bins go out Monday night (black) and Thursday night (recycling)'],
+    ['🔒', 'Double-lock the front door and leave the key in the key safe'],
+  ],
+  showGuestNames: true,
+  mapEmbed: 'https://www.google.com/maps?q=94+Cyprus+Street,+London+E2+0NN&z=15&output=embed',
+};
+
+/* ============================================================
+   state & helpers
+   ============================================================ */
+const LS = { pw: 'hb_password', codes: 'hb_codes', guest: 'hb_guest' };
+const $ = (id) => document.getElementById(id);
+const state = {
+  password: localStorage.getItem(LS.pw) || '',
+  bookings: [], config: { maxNights: 14, maxGuests: 6 },
+  checkIn: null, checkOut: null, guests: 2, monthOffset: 0,
+  bookedNights: new Set(), loaded: false,
+};
+const DEMO = !SCRIPT_URL;
+
+const pad = (n) => String(n).padStart(2, '0');
+const iso = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const parseISO = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const todayISO = () => iso(new Date());
+const nights = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 86400000);
+const fmt = (s, withYear) => parseISO(s).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) });
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(t._t); t._t = setTimeout(() => (t.hidden = true), 3000); }
+function codes() { try { return JSON.parse(localStorage.getItem(LS.codes) || '{}'); } catch { return {}; } }
+function saveCode(id, code) { const c = codes(); c[id] = code; localStorage.setItem(LS.codes, JSON.stringify(c)); }
+
+/* ============================================================
+   API — talks to Apps Script, or a local demo when unconfigured
+   ============================================================ */
+const demo = (() => {
+  const t = new Date();
+  const d = (n) => iso(addDays(t, n));
+  let list = [
+    { id: 'demo1', name: 'Mum & Dad', start: d(6), end: d(10), guests: 2, nights: 4 },
+    { id: 'demo2', name: 'Unavailable', start: d(18), end: d(21), guests: 0, external: true },
+    { id: 'demo3', name: 'Sarah + kids', start: d(33), end: d(37), guests: 4, nights: 4 },
+  ];
+  const overlaps = (a, b, c, e) => a < e && c < b;
+  return async (body) => {
+    await new Promise((r) => setTimeout(r, 250));
+    if (body.password !== 'demo') return { ok: false, error: 'Wrong password', auth: false };
+    switch (body.action) {
+      case 'login': return { ok: true };
+      case 'list': return { ok: true, bookings: list, config: { maxNights: 14, maxGuests: 6 } };
+      case 'book': {
+        if (list.some((b) => overlaps(body.start, body.end, b.start, b.end))) return { ok: false, error: 'Those dates have just been taken.' };
+        const id = 'demo' + Math.random().toString(36).slice(2, 6);
+        list.push({ id, name: body.name, email: body.email, start: body.start, end: body.end, guests: body.guests, nights: nights(body.start, body.end), code: 'DEMO42' });
+        return { ok: true, id, cancelCode: 'DEMO42', start: body.start, end: body.end, nights: nights(body.start, body.end) };
+      }
+      case 'mine': return { ok: true, bookings: list.filter((b) => b.email === body.email).map((b) => ({ ...b, status: 'Confirmed' })) };
+      case 'cancel': { const b = list.find((x) => x.id === body.id); if (!b) return { ok: false, error: 'Not found' }; if (body.cancelCode !== b.code) return { ok: false, error: 'That cancel code doesn’t match.' }; list = list.filter((x) => x.id !== body.id); return { ok: true }; }
+    }
+    return { ok: false, error: 'Unknown action' };
+  };
+})();
+
+async function api(action, payload = {}) {
+  const body = { ...payload, action, password: state.password };
+  if (DEMO) return demo(body);
+  const res = await fetch(SCRIPT_URL, {
+    method: 'POST', redirect: 'follow',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // text/plain avoids a CORS preflight, which Apps Script can't answer
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  try { return JSON.parse(text); } catch { return { ok: false, error: 'Unexpected response from the booking backend.' }; }
+}
+
+/* ============================================================
+   gate / auth
+   ============================================================ */
+async function tryLoad() {
+  const r = await api('list');
+  if (!r.ok) {
+    if (r.auth === false) { showGate(); return false; }
+    toast(r.error || 'Could not load availability'); return false;
+  }
+  state.bookings = r.bookings || [];
+  state.config = { ...state.config, ...(r.config || {}) };
+  state.bookedNights = new Set();
+  for (const b of state.bookings) {
+    let d = parseISO(b.start); const end = parseISO(b.end);
+    while (d < end) { state.bookedNights.add(iso(d)); d = addDays(d, 1); }
+  }
+  state.loaded = true;
+  $('gate').hidden = true;
+  renderAll();
+  return true;
+}
+function showGate() { $('gate').hidden = false; $('gateErr').textContent = ''; setTimeout(() => $('gatePw').focus(), 50); }
+$('gateForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const pw = $('gatePw').value.trim();
+  if (!pw) return;
+  $('gateBtn').disabled = true; $('gateErr').textContent = '';
+  state.password = pw;
+  const r = await api('login');
+  $('gateBtn').disabled = false;
+  if (!r.ok) { $('gateErr').textContent = r.auth === false ? 'That’s not it — ask Phelim for the password.' : (r.error || 'Something went wrong'); state.password = ''; return; }
+  localStorage.setItem(LS.pw, pw);
+  $('gatePw').value = '';
+  await tryLoad();
+});
+$('logoutBtn').addEventListener('click', () => { localStorage.removeItem(LS.pw); state.password = ''; showGate(); });
+
+/* ============================================================
+   static rendering
+   ============================================================ */
+function renderStatic() {
+  document.title = `${HOUSE.name} — Stay with us`;
+  $('houseName').textContent = HOUSE.name;
+  $('houseLocation').textContent = HOUSE.location;
+  $('houseFacts').textContent = HOUSE.facts || '';
+  $('hostLine').textContent = `Hosted by ${HOUSE.host}`;
+  $('hostMeta').textContent = HOUSE.hostMeta;
+  $('hostAvatar').textContent = HOUSE.host[0];
+  $('footHost').textContent = HOUSE.host;
+  $('addressLine').textContent = HOUSE.address;
+  $('map').innerHTML = HOUSE.mapEmbed ? `<iframe loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${esc(HOUSE.mapEmbed)}" title="Map"></iframe>` : '';
+  $('highlights').innerHTML = HOUSE.highlights.map(([ic, b, s]) => `<li><span class="ic">${ic}</span><div><b>${esc(b)}</b><span>${esc(s)}</span></div></li>`).join('');
+  $('description').innerHTML = `<h2 class="sec">About the place</h2>` + HOUSE.description.map((p) => `<p>${esc(p)}</p>`).join('');
+  $('amenities').innerHTML = HOUSE.amenities.map(([ic, t]) => `<li><span class="ic">${ic}</span>${esc(t)}</li>`).join('');
+  $('rules').innerHTML = HOUSE.rules.map(([ic, t]) => `<li><span>${ic}</span><span>${esc(t)}</span></li>`).join('');
+  const labels = ['Front of the house', 'Living room', 'Kitchen', 'Bedroom', 'Garden'];
+  $('photos').innerHTML = Array.from({ length: 5 }, (_, i) => {
+    const url = HOUSE.photos[i];
+    return url ? `<div class="ph" role="button" data-photo="${i}" style="background-image:url('${esc(url)}')"></div>` : `<div class="ph placeholder p${i + 1}">${labels[i]}</div>`;
+  }).join('') + (HOUSE.photos.length ? `<button class="showall" data-photo="0">⊞ Show all ${HOUSE.photos.length} photos</button>` : '');
+  $('gallery').innerHTML = HOUSE.photos.map((u, i) => `<img src="${esc(u)}" alt="Photo ${i + 1}" loading="lazy" id="gph${i}" />`).join('');
+  $('demoBanner').hidden = !DEMO;
+}
+$('photos').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-photo]'); if (!el) return;
+  $('galleryModal').hidden = false;
+  const img = $('gph' + el.dataset.photo); if (img) img.scrollIntoView({ block: 'start' });
+});
+
+/* ============================================================
+   calendar
+   ============================================================ */
+const DOW = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+function monthsToShow() { return window.matchMedia('(max-width: 900px)').matches ? 1 : 2; }
+
+// After check-in is chosen, the furthest reachable check-out = first booked night on/after check-in (inclusive), capped at maxNights
+function maxCheckout(checkIn) {
+  let d = parseISO(checkIn);
+  for (let i = 1; i <= state.config.maxNights; i++) {
+    if (state.bookedNights.has(iso(d))) return iso(d);  // night d is taken → d itself is the last valid check-out day
+    d = addDays(d, 1);
+  }
+  return iso(d);
+}
+
+function renderCalendar() {
+  const base = new Date(); base.setDate(1);
+  const wrap = $('months'); wrap.innerHTML = '';
+  const t = todayISO();
+  const limit = state.checkIn && !state.checkOut ? maxCheckout(state.checkIn) : null;
+  for (let m = 0; m < monthsToShow(); m++) {
+    const first = new Date(base.getFullYear(), base.getMonth() + state.monthOffset + m, 1);
+    const div = document.createElement('div'); div.className = 'month';
+    div.innerHTML = `<h3>${first.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</h3><div class="dow">${DOW.map((d) => `<span>${d}</span>`).join('')}</div>`;
+    const days = document.createElement('div'); days.className = 'days';
+    const lead = (first.getDay() + 6) % 7;
+    for (let i = 0; i < lead; i++) { const e = document.createElement('div'); e.className = 'day empty'; days.appendChild(e); }
+    const dim = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+    for (let d = 1; d <= dim; d++) {
+      const date = new Date(first.getFullYear(), first.getMonth(), d); const s = iso(date);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'day'; b.textContent = d; b.dataset.date = s;
+      const nightBooked = state.bookedNights.has(s);
+      const prevNightBooked = state.bookedNights.has(iso(addDays(date, -1)));
+      if (s === t) b.classList.add('today');
+      if (s < t) b.classList.add('disabled');
+      else if (nightBooked) {
+        b.classList.add('booked');
+        if (!prevNightBooked && state.checkIn && !state.checkOut && s > state.checkIn && s <= limit) b.classList.add('checkout-ok');
+      }
+      if (state.checkIn && !state.checkOut && s > state.checkIn && s > limit) b.classList.add('unreachable');
+      if (state.checkIn === s) { b.classList.add('start'); if (!state.checkOut) b.classList.add('only'); }
+      if (state.checkOut === s) b.classList.add('end');
+      if (state.checkIn && state.checkOut && s > state.checkIn && s < state.checkOut) b.classList.add('in-range');
+      days.appendChild(b);
+    }
+    div.appendChild(days); wrap.appendChild(div);
+  }
+  $('calPrev').disabled = state.monthOffset <= 0;
+  $('calNext').disabled = state.monthOffset >= 12;
+  $('calClear').hidden = !state.checkIn;
+  if (!state.checkIn) { $('calTitle').textContent = 'Select your dates'; $('calSub').textContent = 'Pick a check-in day, then a check-out day.'; }
+  else if (!state.checkOut) { $('calTitle').textContent = 'Select check-out'; $('calSub').textContent = `Checking in ${fmt(state.checkIn)}. Now pick the day you leave (up to ${plural(state.config.maxNights, 'night')}).`; }
+  else { const n = nights(state.checkIn, state.checkOut); $('calTitle').textContent = `${plural(n, 'night')} in ${HOUSE.location.split(',')[0]}`; $('calSub').textContent = `${fmt(state.checkIn)} → ${fmt(state.checkOut)}`; }
+}
+
+function onDayClick(s) {
+  const t = todayISO();
+  if (s < t) return;
+  const nightBooked = state.bookedNights.has(s);
+  if (!state.checkIn || state.checkOut) {
+    if (nightBooked) return;
+    state.checkIn = s; state.checkOut = null;
+  } else {
+    if (s <= state.checkIn) { if (nightBooked) return; state.checkIn = s; state.checkOut = null; }
+    else if (s > maxCheckout(state.checkIn)) { if (nightBooked) return; state.checkIn = s; state.checkOut = null; toast('Those dates aren’t free — starting a new selection'); }
+    else state.checkOut = s;
+  }
+  renderCalendar(); renderCard();
+}
+$('months').addEventListener('click', (e) => { const b = e.target.closest('.day[data-date]'); if (b) onDayClick(b.dataset.date); });
+$('calPrev').addEventListener('click', () => { state.monthOffset = Math.max(0, state.monthOffset - 1); renderCalendar(); });
+$('calNext').addEventListener('click', () => { state.monthOffset = Math.min(12, state.monthOffset + 1); renderCalendar(); });
+$('calClear').addEventListener('click', () => { state.checkIn = state.checkOut = null; renderCalendar(); renderCard(); });
+window.addEventListener('resize', () => { if (state.loaded) renderCalendar(); });
+
+/* ============================================================
+   booking card
+   ============================================================ */
+function renderCard() {
+  const ci = $('fCheckIn').querySelector('div'), co = $('fCheckOut').querySelector('div');
+  ci.textContent = state.checkIn ? fmt(state.checkIn) : 'Add date'; ci.classList.toggle('set', !!state.checkIn);
+  co.textContent = state.checkOut ? fmt(state.checkOut) : 'Add date'; co.classList.toggle('set', !!state.checkOut);
+  $('gCount').textContent = state.guests; $('guestLabel').textContent = plural(state.guests, 'guest');
+  $('gMinus').disabled = state.guests <= 1; $('gPlus').disabled = state.guests >= state.config.maxGuests;
+  const ready = !!(state.checkIn && state.checkOut);
+  $('reserveBtn').disabled = !ready;
+  $('summary').hidden = !ready; $('cardHint').hidden = ready;
+  if (ready) { const n = nights(state.checkIn, state.checkOut); $('sumNights').textContent = `£0 × ${plural(n, 'night')}`; $('mbarTitle').textContent = `${plural(n, 'night')} · Free`; $('mbarSub').textContent = `${fmt(state.checkIn)} → ${fmt(state.checkOut)}`; $('mbarBtn').textContent = 'Reserve'; }
+  else { $('mbarTitle').textContent = 'Free'; $('mbarSub').textContent = state.checkIn ? `Check-in ${fmt(state.checkIn)} · pick check-out` : 'Select dates'; $('mbarBtn').textContent = 'Select dates'; }
+}
+const scrollToCal = () => $('calendarSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+$('fCheckIn').addEventListener('click', scrollToCal); $('fCheckOut').addEventListener('click', scrollToCal);
+$('gMinus').addEventListener('click', () => { state.guests = Math.max(1, state.guests - 1); renderCard(); });
+$('gPlus').addEventListener('click', () => { state.guests = Math.min(state.config.maxGuests, state.guests + 1); renderCard(); });
+$('reserveBtn').addEventListener('click', openBooking);
+$('mbarBtn').addEventListener('click', () => (state.checkIn && state.checkOut ? openBooking() : scrollToCal()));
+
+/* ============================================================
+   upcoming stays
+   ============================================================ */
+function renderStays() {
+  const t = todayISO();
+  const list = state.bookings.filter((b) => b.end > t).sort((a, b) => (a.start < b.start ? -1 : 1));
+  if (!list.length) { $('stays').innerHTML = `<div class="empty-note">Nobody yet — you could be first.</div>`; return; }
+  $('stays').innerHTML = list.map((b) => {
+    const cur = b.start <= t;
+    const who = b.external ? 'Unavailable' : HOUSE.showGuestNames ? b.name : 'Booked';
+    const n = nights(b.start, b.end);
+    return `<div class="stay"><div class="when">${fmt(b.start)} →<br>${fmt(b.end)}</div><div class="who">${esc(who)}<small>${plural(n, 'night')}${b.guests ? ` · ${plural(b.guests, 'guest')}` : ''}</small></div>${cur ? '<span class="tag">Here now</span>' : ''}</div>`;
+  }).join('');
+}
+
+/* ============================================================
+   booking flow
+   ============================================================ */
+function openBooking() {
+  if (!state.checkIn || !state.checkOut) return;
+  const g = (() => { try { return JSON.parse(localStorage.getItem(LS.guest) || '{}'); } catch { return {}; } })();
+  $('bName').value = g.name || ''; $('bEmail').value = g.email || ''; $('bPhone').value = g.phone || ''; $('bNote').value = '';
+  $('bGuests').value = state.guests; $('bGuests').max = state.config.maxGuests;
+  const n = nights(state.checkIn, state.checkOut);
+  $('bookRecap').innerHTML = `<b>${fmt(state.checkIn, true)} → ${fmt(state.checkOut, true)}</b>${plural(n, 'night')} at ${esc(HOUSE.name)} · Free`;
+  $('bookErr').textContent = ''; $('bookModal').hidden = false; setTimeout(() => ($('bName').value ? $('bNote') : $('bName')).focus(), 50);
+}
+$('bookForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const payload = { name: $('bName').value.trim(), email: $('bEmail').value.trim(), phone: $('bPhone').value.trim(), note: $('bNote').value.trim(), guests: Number($('bGuests').value) || 1, start: state.checkIn, end: state.checkOut };
+  $('bookSubmit').disabled = true; $('bookSubmit').textContent = 'Booking…'; $('bookErr').textContent = '';
+  const r = await api('book', payload);
+  $('bookSubmit').disabled = false; $('bookSubmit').textContent = 'Confirm booking';
+  if (!r.ok) { $('bookErr').textContent = r.error || 'Something went wrong'; if (r.auth === false) { $('bookModal').hidden = true; showGate(); } else if (/taken/i.test(r.error || '')) { await tryLoad(); } return; }
+  localStorage.setItem(LS.guest, JSON.stringify({ name: payload.name, email: payload.email, phone: payload.phone }));
+  saveCode(r.id, r.cancelCode);
+  $('bookModal').hidden = true;
+  $('doneSub').textContent = `${fmt(r.start, true)} → ${fmt(r.end, true)} · ${plural(r.nights, 'night')} · ${plural(payload.guests, 'guest')}. Confirmation sent to ${payload.email}.`;
+  $('doneCode').textContent = r.cancelCode;
+  $('icsLink').href = icsUrl(r.start, r.end, r.id);
+  $('doneModal').hidden = false;
+  state.checkIn = state.checkOut = null;
+  await tryLoad();
+});
+
+function icsUrl(start, end, id) {
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//house-bookings//EN', 'BEGIN:VEVENT', `UID:${id}@house-bookings`, `DTSTAMP:${stamp}`,
+    `DTSTART;VALUE=DATE:${start.replace(/-/g, '')}`, `DTEND;VALUE=DATE:${end.replace(/-/g, '')}`, `SUMMARY:Stay at ${HOUSE.name}`, `LOCATION:${HOUSE.address}`, 'END:VEVENT', 'END:VCALENDAR'].join('\r\n');
+  return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+}
+
+/* ============================================================
+   manage / cancel
+   ============================================================ */
+function openManage() {
+  const g = (() => { try { return JSON.parse(localStorage.getItem(LS.guest) || '{}'); } catch { return {}; } })();
+  $('mineEmail').value = g.email || ''; $('mineList').innerHTML = ''; $('mineErr').textContent = '';
+  $('manageModal').hidden = false;
+  if (g.email) loadMine(); else setTimeout(() => $('mineEmail').focus(), 50);
+}
+async function loadMine() {
+  const email = $('mineEmail').value.trim().toLowerCase(); if (!email) return;
+  $('mineList').innerHTML = '<div class="empty-note">Looking…</div>'; $('mineErr').textContent = '';
+  const r = await api('mine', { email });
+  if (!r.ok) { $('mineList').innerHTML = ''; $('mineErr').textContent = r.error || 'Something went wrong'; return; }
+  if (!r.bookings.length) { $('mineList').innerHTML = `<div class="empty-note">No stays found for ${esc(email)}.</div>`; return; }
+  const t = todayISO();
+  $('mineList').innerHTML = r.bookings.map((b) => {
+    const live = b.status === 'Confirmed';
+    const past = b.end <= t;
+    return `<div class="stay ${live ? '' : 'cancelled'}"><div class="when">${fmt(b.start)} →<br>${fmt(b.end)}</div><div class="who">${esc(b.name)}<small>${plural(nights(b.start, b.end), 'night')} · ${plural(b.guests, 'guest')}${live ? '' : ' · cancelled'}${past && live ? ' · past' : ''}</small></div>${live && !past ? `<button data-cancel="${esc(b.id)}">Cancel</button>` : ''}</div>`;
+  }).join('');
+}
+$('mineForm').addEventListener('submit', (e) => { e.preventDefault(); loadMine(); });
+$('mineList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-cancel]'); if (!btn) return;
+  const id = btn.dataset.cancel;
+  let code = codes()[id];
+  if (!code) { code = prompt('Enter the cancel code from your confirmation email:'); if (!code) return; }
+  if (!confirm('Cancel this stay? The dates will open up for someone else.')) return;
+  btn.disabled = true; btn.textContent = 'Cancelling…';
+  const r = await api('cancel', { id, cancelCode: code.trim().toUpperCase() });
+  if (!r.ok) { btn.disabled = false; btn.textContent = 'Cancel'; $('mineErr').textContent = r.error || 'Could not cancel'; return; }
+  toast('Stay cancelled'); await loadMine(); await tryLoad();
+});
+$('manageBtn').addEventListener('click', openManage); $('manageBtnTop').addEventListener('click', openManage);
+
+/* ============================================================
+   misc wiring
+   ============================================================ */
+document.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => (b.closest('.overlay').hidden = true)));
+document.querySelectorAll('.overlay').forEach((o) => o.addEventListener('click', (e) => { if (e.target === o) o.hidden = true; }));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') document.querySelectorAll('.overlay').forEach((o) => (o.hidden = true)); });
+
+function renderAll() { renderCalendar(); renderCard(); renderStays(); }
+
+renderStatic();
+renderCard();
+if (state.password) tryLoad(); else showGate();
+</script>
+</body>
+</html>
