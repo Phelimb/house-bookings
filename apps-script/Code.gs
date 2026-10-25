@@ -8,6 +8,7 @@
 //   SITE_URL          (recommended) public URL of the booking site; used for the
 //                                 approve/decline link in request emails
 //   OWNER_EMAIL       (optional)  where booking notifications go; defaults to you
+//   CC_EMAILS         (optional)  comma-separated addresses copied on every email (owner and guest)
 //   CALENDAR_NAME     (optional)  Google Calendar to write stays into; default "House guests"
 //   PHOTOS_FOLDER_ID  (optional)  Google Drive folder of listing photos, shown after login
 //   MAX_NIGHTS        (optional)  default 14
@@ -292,8 +293,13 @@ function publicView(b) {
 
 function sendMail(to, subject, html, attachments) {
   if (!to) return;
+  const toList = String(to).toLowerCase().split(',').map(s => s.trim());
+  const cc = String(prop('CC_EMAILS', '')).split(',').map(s => s.trim())
+    .filter(s => s && toList.indexOf(s.toLowerCase()) === -1).join(',');
   try {
-    MailApp.sendEmail({ to: to, subject: subject, htmlBody: html, name: 'House bookings', attachments: attachments || [] });
+    const msg = { to: to, subject: subject, htmlBody: html, name: 'House bookings', attachments: attachments || [] };
+    if (cc) msg.cc = cc;
+    MailApp.sendEmail(msg);
   } catch (err) {
     Logger.log('Mail failed: ' + err);
   }
