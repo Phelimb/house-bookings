@@ -11,6 +11,8 @@
 //   CALENDAR_NAME     (optional)  Google Calendar to write stays into; default "House guests"
 //   PHOTOS_FOLDER_ID  (optional)  Google Drive folder of listing photos, shown after login
 //   MAX_NIGHTS        (optional)  default 14
+//   AVAILABLE_FROM    (optional)  first check-in day, YYYY-MM-DD; default 2026-11-09
+//   AVAILABLE_TO      (optional)  last check-out day, YYYY-MM-DD; default 2027-03-31
 //   MAX_GUESTS        (optional)  default 6
 //
 // Anything identifying (address, photos, key safe code) lives in the Sheet or Drive,
@@ -413,6 +415,14 @@ function reviewLink(b) {
 
 // ---------------------------------------------------------------- actions
 
+// The window the house can be booked in: check-in on or after `from`, check-out on or before `to`.
+function availability() {
+  return {
+    from: prop('AVAILABLE_FROM', '2026-11-09'),
+    to: prop('AVAILABLE_TO', '2027-03-31')
+  };
+}
+
 function actionList() {
   const from = addDays(today(), -60);
   const to = addDays(today(), 400);
@@ -425,7 +435,9 @@ function actionList() {
     bookings: bookings.concat(blocks),
     config: {
       maxNights: Number(prop('MAX_NIGHTS', 14)),
-      maxGuests: Number(prop('MAX_GUESTS', 6))
+      maxGuests: Number(prop('MAX_GUESTS', 6)),
+      availableFrom: availability().from,
+      availableTo: availability().to
     }
   };
 }
@@ -453,6 +465,10 @@ function actionBook(body) {
   if (nights < 1) return { ok: false, error: 'Check-out must be after check-in.' };
   const maxNights = Number(prop('MAX_NIGHTS', 14));
   if (nights > maxNights) return { ok: false, error: 'Stays are limited to ' + maxNights + ' nights.' };
+  const win = availability();
+  if (toISO(start) < win.from || toISO(end) > win.to) {
+    return { ok: false, error: 'The house is only available from ' + fmtLong(win.from) + ' to ' + fmtLong(win.to) + '.' };
+  }
 
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);

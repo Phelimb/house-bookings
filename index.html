@@ -549,6 +549,7 @@ async function tryLoad() {
   }
   state.bookings = r.bookings || [];
   state.config = { ...state.config, ...(r.config || {}) };
+  state.monthOffset = Math.min(Math.max(state.monthOffset, minOffset()), maxOffset());
   state.bookedNights = new Set();
   for (const b of state.bookings) {
     let d = parseISO(b.start); const end = parseISO(b.end);
@@ -641,11 +642,20 @@ $('photos').addEventListener('click', (e) => {
 const DOW = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 function monthsToShow() { return window.matchMedia('(max-width: 900px)').matches ? 1 : 2; }
 
+// Booking window from the backend: check-in on/after availableFrom (and not in the past),
+// check-out on/before availableTo. Missing values mean no limit.
+function openFrom() { const t = todayISO(), f = state.config.availableFrom; return f && f > t ? f : t; }
+function openTo() { return state.config.availableTo || '9999-12-31'; }
+function canCheckIn(s) { return s >= openFrom() && s < openTo() && !state.bookedNights.has(s); }
+function monthIndex(s) { const [y, m] = s.split('-').map(Number); return y * 12 + m - 1; }
+function minOffset() { const now = new Date(); return Math.max(0, monthIndex(openFrom()) - (now.getFullYear() * 12 + now.getMonth())); }
+function maxOffset() { const now = new Date(); const cur = now.getFullYear() * 12 + now.getMonth(); return state.config.availableTo ? Math.max(minOffset(), monthIndex(openTo()) - cur - monthsToShow() + 1) : 12; }
+
 // After check-in is chosen, the furthest reachable check-out = first booked night on/after check-in (inclusive), capped at maxNights
 function maxCheckout(checkIn) {
   let d = parseISO(checkIn);
   for (let i = 1; i <= state.config.maxNights; i++) {
-    if (state.bookedNights.has(iso(d))) return iso(d);  // night d is taken → d itself is the last valid check-out day
+    if (state.bookedNights.has(iso(d)) || iso(d) >= openTo()) return iso(d);  // night d is taken → d itself is the last valid check-out day
     d = addDays(d, 1);
   }
   return iso(d);
@@ -670,7 +680,8 @@ function renderCalendar() {
       const nightBooked = state.bookedNights.has(s);
       const prevNightBooked = state.bookedNights.has(iso(addDays(date, -1)));
       if (s === t) b.classList.add('today');
-      if (s < t) b.classList.add('disabled');
+      const choosingCheckout = state.checkIn && !state.checkOut && s > state.checkIn && s <= limit;
+      if (s < openFrom() || s > openTo() || (s === openTo() && !choosingCheckout)) b.classList.add('disabled');
       else if (nightBooked) {
         b.classList.add('booked');
         if (!prevNightBooked && state.checkIn && !state.checkOut && s > state.checkIn && s <= limit) b.classList.add('checkout-ok');
@@ -683,31 +694,29 @@ function renderCalendar() {
     }
     div.appendChild(days); wrap.appendChild(div);
   }
-  $('calPrev').disabled = state.monthOffset <= 0;
-  $('calNext').disabled = state.monthOffset >= 12;
+  $('calPrev').disabled = state.monthOffset <= minOffset();
+  $('calNext').disabled = state.monthOffset >= maxOffset();
   $('calClear').hidden = !state.checkIn;
-  if (!state.checkIn) { $('calTitle').textContent = 'Select your dates'; $('calSub').textContent = 'Pick a check-in day, then a check-out day.'; }
+  const windowNote = state.config.availableFrom ? ` Available ${fmt(openFrom())} to ${fmt(openTo(), true)}.` : '';
+  if (!state.checkIn) { $('calTitle').textContent = 'Select your dates'; $('calSub').textContent = 'Pick a check-in day, then a check-out day.' + windowNote; }
   else if (!state.checkOut) { $('calTitle').textContent = 'Select check-out'; $('calSub').textContent = `Checking in ${fmt(state.checkIn)}. Now pick the day you leave (up to ${plural(state.config.maxNights, 'night')}).`; }
   else { const n = nights(state.checkIn, state.checkOut); $('calTitle').textContent = plural(n, 'night') + (house.location ? ` in ${house.location.split(',')[0]}` : ''); $('calSub').textContent = `${fmt(state.checkIn)} → ${fmt(state.checkOut)}`; }
 }
 
 function onDayClick(s) {
-  const t = todayISO();
-  if (s < t) return;
-  const nightBooked = state.bookedNights.has(s);
   if (!state.checkIn || state.checkOut) {
-    if (nightBooked) return;
+    if (!canCheckIn(s)) return;
     state.checkIn = s; state.checkOut = null;
   } else {
-    if (s <= state.checkIn) { if (nightBooked) return; state.checkIn = s; state.checkOut = null; }
-    else if (s > maxCheckout(state.checkIn)) { if (nightBooked) return; state.checkIn = s; state.checkOut = null; toast('Those dates aren’t free — starting a new selection'); }
+    if (s <= state.checkIn) { if (!canCheckIn(s)) return; state.checkIn = s; state.checkOut = null; }
+    else if (s > maxCheckout(state.checkIn)) { if (!canCheckIn(s)) return; state.checkIn = s; state.checkOut = null; toast('Those dates aren’t free — starting a new selection'); }
     else state.checkOut = s;
   }
   renderCalendar(); renderCard();
 }
 $('months').addEventListener('click', (e) => { const b = e.target.closest('.day[data-date]'); if (b) onDayClick(b.dataset.date); });
-$('calPrev').addEventListener('click', () => { state.monthOffset = Math.max(0, state.monthOffset - 1); renderCalendar(); });
-$('calNext').addEventListener('click', () => { state.monthOffset = Math.min(12, state.monthOffset + 1); renderCalendar(); });
+$('calPrev').addEventListener('click', () => { state.monthOffset = Math.max(minOffset(), state.monthOffset - 1); renderCalendar(); });
+$('calNext').addEventListener('click', () => { state.monthOffset = Math.min(maxOffset(), state.monthOffset + 1); renderCalendar(); });
 $('calClear').addEventListener('click', () => { state.checkIn = state.checkOut = null; renderCalendar(); renderCard(); });
 window.addEventListener('resize', () => { if (state.loaded) renderCalendar(); });
 

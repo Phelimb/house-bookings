@@ -9,6 +9,8 @@ const crypto = require('crypto');
 
 const PASSWORD = 'test';
 const PORT = 8787;
+const AVAILABLE_FROM = '2026-11-09';
+const AVAILABLE_TO = '2027-03-31';
 const PHOTOS_DIR = path.join(__dirname, '..', 'private', 'photos');
 const t = new Date();
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -47,10 +49,11 @@ function handle(body) {
   if (body.password !== PASSWORD) return { ok: false, error: 'Wrong password', auth: false };
   switch (body.action) {
     case 'login': return { ok: true };
-    case 'list': return { ok: true, bookings: bookings.filter(holds).map(pub), config: { maxNights: 14, maxGuests: 6 } };
+    case 'list': return { ok: true, bookings: bookings.filter(holds).map(pub), config: { maxNights: 14, maxGuests: 6, availableFrom: AVAILABLE_FROM, availableTo: AVAILABLE_TO } };
     case 'house': return { ok: true, house: { name: 'Test House', location: 'Testville', address: '1 Example Street, London', photos: photos() } };
     case 'book': {
       if (!body.name || !body.email) return { ok: false, error: 'Missing name/email' };
+      if (body.start < AVAILABLE_FROM || body.end > AVAILABLE_TO) return { ok: false, error: `The house is only available from ${AVAILABLE_FROM} to ${AVAILABLE_TO}.` };
       if (bookings.some((b) => holds(b) && overlaps(body.start, body.end, b.start, b.end))) return { ok: false, error: 'Those dates have just been taken.' };
       const id = Math.random().toString(36).slice(2, 10);
       const nights = Math.round((new Date(body.end) - new Date(body.start)) / 86400000);
