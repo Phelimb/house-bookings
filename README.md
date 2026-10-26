@@ -55,6 +55,7 @@ the password:
    | `PHOTOS_FOLDER_ID` | ID of a Drive folder of listing photos (optional, see below)            |
    | `OWNER_EMAIL`      | where request emails go (optional, defaults to you)                     |
    | `CC_EMAILS`        | addresses copied on every email, comma-separated (optional)             |
+   | `WASHING_MACHINE_URL` | link to washing machine instructions, shown in confirmation emails (optional) |
    | `CALENDAR_NAME`    | calendar to write stays into (optional, default `House guests`)         |
    | `MAX_NIGHTS`       | longest allowed stay (optional, default 14)                             |
    | `MAX_GUESTS`       | most guests per booking (optional, default 6)                           |

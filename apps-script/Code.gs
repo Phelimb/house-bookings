@@ -9,6 +9,7 @@
 //                                 approve/decline link in request emails
 //   OWNER_EMAIL       (optional)  where booking notifications go; defaults to you
 //   CC_EMAILS         (optional)  comma-separated addresses copied on every email (owner and guest)
+//   WASHING_MACHINE_URL (optional) link to washing machine instructions for the confirmation email
 //   CALENDAR_NAME     (optional)  Google Calendar to write stays into; default "House guests"
 //   PHOTOS_FOLDER_ID  (optional)  Google Drive folder of listing photos, shown after login
 //   MAX_NIGHTS        (optional)  default 14
@@ -178,6 +179,26 @@ function houseInfo() {
   const out = {};
   readKV(HOUSE_TAB, HOUSE_ROWS).forEach(r => (out[r[0]] = r[1]));
   return out;
+}
+
+// Sheets and rubbish instructions for the confirmation email. There's no cleaner between guests.
+// Set WASHING_MACHINE_URL in Script Properties to link to the washing machine instructions.
+function housekeepingHtml() {
+  const wm = prop('WASHING_MACHINE_URL', '');
+  const li = t => '<li style="margin-bottom:6px">' + t + '</li>';
+  return '<p><b>Looking after the house</b><br>We won’t have a cleaner, so please leave the house as you found it.</p>' +
+    '<p><b>On arrival</b></p><ul>' +
+      li('Please put any dirty sheets from the previous guest in the washing machine. They should be left by the washing machine in the kitchen.') +
+      (wm ? li('<a href="' + esc(wm) + '">How to use the washing machine</a>') : '') +
+      li('If you’re here on a rubbish collection day (Monday night for black bags, Sunday night for recycling), please check the silver bin outside the kitchen window for any rubbish from previous guests.') +
+    '</ul>' +
+    '<p><b>During and after your stay</b></p><ul>' +
+      li('Any remaining rubbish or recycling can be left in the silver bin outside the kitchen window.') +
+    '</ul>' +
+    '<p><b>On departure</b></p><ul>' +
+      li('Please strip the bed and leave your sheets next to the washing machine in the kitchen.') +
+      li('Make the bed with the sheets you washed on arrival.') +
+    '</ul>';
 }
 
 function houseName() {
@@ -392,6 +413,7 @@ function approve(b) {
           arrival.map(r => '<tr><td style="vertical-align:top;color:#666;padding-right:16px">' + esc(r[0]) + '</td><td><b>' + escBr(r[1]) + '</b></td></tr>').join('') +
           '</table>'
         : '') +
+      housekeepingHtml() +
       '<p>A calendar file is attached.</p>' +
       cancelLine(b),
     [icsBlob(b, house.address)]
