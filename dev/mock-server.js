@@ -40,7 +40,7 @@ function handle(body) {
     if (!b) return { ok: false, error: 'This review link isn’t valid.' };
     if (body.action === 'review') return { ok: true, booking: { ...pub(b), email: b.email, phone: b.phone || '', note: b.note || '', created: b.created || '' } };
     if (b.status !== 'Requested') return { ok: false, error: `This booking is already ${b.status.toLowerCase()}.` };
-    if (body.decision === 'approve') { b.status = 'Confirmed'; mail(b.email, 'You’re booked (with address + arrival details)'); }
+    if (body.decision === 'approve') { b.status = 'Confirmed'; mail(b.email, 'You’re booked (with address; access details to follow)'); }
     else if (body.decision === 'decline') { b.status = 'Declined'; mail(b.email, `About your stay request${body.message ? ` — “${body.message}”` : ''}`); }
     else return { ok: false, error: 'Unknown decision' };
     console.log('DECIDE', b.id, b.status);

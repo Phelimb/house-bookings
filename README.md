@@ -8,7 +8,8 @@ friends pick dates on a calendar and **request** a stay for free; you approve or
    details and a **Review** button.
 2. You **approve** (from the email link, or the Sheet's **Bookings** menu). The stay goes onto
    a **Google Calendar** in your account, and the guest gets a confirmation with the address,
-   the key safe code and arrival details, plus a calendar file.
+   a note that access details will follow, plus a calendar file. You send the key safe
+   code and access details yourself, closer to the stay.
 3. Or you **decline**, with an optional message. The guest gets a polite email and the dates free up.
 
 Guests can withdraw a request or cancel a stay themselves ("Manage my stay") with the
@@ -36,7 +37,7 @@ the password:
 | `index.html`                   | generic description, amenities, house notes                 | anyone                       |
 | Sheet → **House** tab          | name, location, address (and map), description              | anyone with the password     |
 | Drive photos folder            | listing photos                                              | anyone with the password     |
-| Sheet → **Arrival** tab        | key safe code, wifi, directions…                            | only guests you approve, by email |
+| Sheet → **Arrival** tab        | key safe code, wifi, directions…                            | only you (not emailed)       |
 
 ---
 
@@ -70,8 +71,8 @@ the password:
    - `address` – full address; also drives the map
    - `facts`, `hostMeta`, `description` – optional overrides. Separate description
      paragraphs with a blank line (Ctrl/⌘+Enter for a new line in a cell).
-6. Fill in the **Arrival** tab: key safe code, wifi, etc. Blank rows are left out of the email,
-   and you can add your own rows.
+6. Optionally fill in the **Arrival** tab: key safe code, wifi, etc. It's a place to keep them;
+   they aren't emailed, so send access details to guests yourself.
 7. **Photos** (optional): upload the files from `private/photos/` (or your own) to a Drive
    folder. Photos are shown in filename order, and the first is the big one. Copy the folder ID
    from its URL (`drive.google.com/drive/folders/<ID>`) into `PHOTOS_FOLDER_ID`. Keep them
@@ -126,7 +127,7 @@ How far the obscure name gets you:
   who looks at your profile can see it and work out the Pages URL. If that matters, create the
   repo under a separate GitHub account or organisation that isn't linked to you.
 - **The password is the real protection.** The address, map, photos and guest list only load
-  after the password, and the key safe code only goes out by email to guests you approve.
+  after the password, and the key safe code is never sent automatically.
   The public page and repo show nothing that identifies the house.
 - **A custom domain undoes it.** Adding a `CNAME` file (e.g. `stay.example.com`) makes GitHub
   redirect the obscure URL to that domain, and the domain is easy to guess. Skip it if the

@@ -20,11 +20,11 @@
 // Anything identifying (address, photos, key safe code) lives in the Sheet or Drive,
 // never in this file or the site, because both are in a public repo:
 //   "House" tab    name / location / address / description, shown on the site after login
-//   "Arrival" tab  key safe code, wifi etc., emailed only to guests you approve
+//   "Arrival" tab  key safe code, wifi etc., for your reference (not emailed; send access details yourself)
 //
 // Booking statuses:
 //   Requested  guest asked; dates are held until you approve or decline
-//   Confirmed  you approved; it's on the calendar and the guest has arrival info
+//   Confirmed  you approved; it's on the calendar and the guest has been emailed
 //   Declined   you said no; dates are free again
 //   Cancelled  the guest withdrew or cancelled
 //
@@ -400,7 +400,6 @@ function approve(b) {
   getSheet().getRange(b.row, COL['Calendar Event ID'] + 1).setValue(eventId);
 
   const house = houseInfo();
-  const arrival = readKV(ARRIVAL_TAB, ARRIVAL_ROWS);
   sendMail(
     b.email,
     'You’re booked: ' + fmtLong(b.start) + ' → ' + fmtLong(b.end),
@@ -408,11 +407,7 @@ function approve(b) {
       '<p>Good news: your stay at ' + esc(house.name || 'the house') + ' is confirmed.</p>' +
       '<p><b>' + fmtStay(b) + '</b><br>Guests: ' + b.guests + '</p>' +
       (house.address ? '<p><b>Address</b><br>' + escBr(house.address) + '</p>' : '') +
-      (arrival.length
-        ? '<p><b>Arrival details</b></p><table cellpadding="4" style="border-collapse:collapse">' +
-          arrival.map(r => '<tr><td style="vertical-align:top;color:#666;padding-right:16px">' + esc(r[0]) + '</td><td><b>' + escBr(r[1]) + '</b></td></tr>').join('') +
-          '</table>'
-        : '') +
+      '<p><b>Getting in</b><br>More details on access will follow closer to your stay.</p>' +
       housekeepingHtml() +
       '<p>A calendar file is attached.</p>' +
       cancelLine(b),
@@ -538,7 +533,7 @@ function actionBook(body) {
       '<p>Hi ' + esc(name.split(' ')[0]) + ',</p>' +
         '<p>Thanks! We’ve got your request to stay:</p>' +
         '<p><b>' + fmtStay(b) + '</b><br>Guests: ' + guests + '</p>' +
-        '<p>The dates are held for you. You’ll get another email once it’s confirmed, with the address and arrival details.</p>' +
+        '<p>The dates are held for you. You’ll get another email once it’s confirmed, with the address.</p>' +
         cancelLine(b)
     );
 
@@ -673,7 +668,7 @@ function approveSelected() {
   if (!b) return;
   if (ui.alert('Approve ' + b.name + ', ' + fmtStay(b) + '?', ui.ButtonSet.YES_NO) !== ui.Button.YES) return;
   const r = decide(b.id, 'approve');
-  ui.alert(r.ok ? 'Approved. ' + b.name + ' has been emailed the address and arrival details.' : r.error);
+  ui.alert(r.ok ? 'Approved. ' + b.name + ' has been emailed the confirmation. Send them access details separately.' : r.error);
 }
 
 function declineSelected() {

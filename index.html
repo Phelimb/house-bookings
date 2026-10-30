@@ -376,7 +376,7 @@
       <div class="frow"><label>Your name</label><input id="bName" required maxlength="80" autocomplete="name" /></div>
       <div class="frow"><label>Guests</label><input id="bGuests" type="number" min="1" required /></div>
     </div>
-    <div class="frow"><label>Email</label><input id="bEmail" type="email" required autocomplete="email" /><small>We'll send your confirmation, arrival details and cancel code here.</small></div>
+    <div class="frow"><label>Email</label><input id="bEmail" type="email" required autocomplete="email" /><small>We'll send your confirmation and cancel code here.</small></div>
     <div class="frow"><label>Phone <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="bPhone" type="tel" autocomplete="tel" /></div>
     <div class="frow"><label>Anything to add? <span style="font-weight:400;color:var(--muted)">(optional)</span></label><textarea id="bNote" placeholder="Arrival time, who's coming, etc."></textarea></div>
     <button class="btn" type="submit" id="bookSubmit">Send request</button>
@@ -391,7 +391,7 @@
     <div class="success-ic">✓</div>
     <h2>Request sent!</h2>
     <div class="sub" id="doneSub"></div>
-    <p style="font-size:14px">Your dates are held. Once Phelim confirms, you'll get an email with the address, key safe code and arrival details.</p>
+    <p style="font-size:14px">Your dates are held. Once Phelim confirms, you'll get an email with the address. Access details will follow closer to your stay.</p>
     <p style="font-size:14px;margin-top:12px">Your cancel code, to withdraw or cancel later (also in your email):</p>
     <div class="code" id="doneCode"></div>
   </div>
@@ -441,7 +441,7 @@ const HOUSE = {
   hostMeta: 'For friends & family',
   facts: '3 bedrooms · 1.5 bathrooms · garden',
   highlights: [
-    ['🔑', 'Self check-in', 'Key safe by the front door. The code comes in your confirmation email.'],
+    ['🔑', 'Self check-in', 'Key safe by the front door. We’ll send access details before your stay.'],
     ['🧸', 'Family friendly', 'A cot and a garden.'],
     ['🗓️', 'Free cancellation', 'Plans change. Cancel any time with your cancel code.'],
   ],
@@ -858,7 +858,7 @@ $('reviewBody').addEventListener('click', async (e) => {
   if (!r.ok) { buttons.forEach((b) => (b.disabled = false)); btn.textContent = decision === 'approve' ? 'Approve' : 'Decline'; $('reviewErr').textContent = r.error || 'Something went wrong'; return; }
   $('reviewBody').querySelector('.frow').remove(); $('reviewBody').querySelector('.btns').remove();
   $('reviewBody').insertAdjacentHTML('beforeend', decision === 'approve'
-    ? '<p class="done">✓ Approved. It’s on your calendar, and the guest has been emailed the address and arrival details.</p>'
+    ? '<p class="done">✓ Approved. It’s on your calendar, and the guest has been emailed the confirmation. Send them access details separately.</p>'
     : '<p class="done">Declined. The guest has been emailed and the dates are free again.</p>');
 });
 
